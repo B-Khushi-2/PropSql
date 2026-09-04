@@ -12,7 +12,7 @@ from routes.api import api
 def create_app(config=Config):
     app = Flask(__name__)
     app.config.from_object(config)
-    CORS(app, resources={r"/api/*": {"origins": config.FRONTEND_ORIGIN}})
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, allow_headers=["Content-Type", "X-User-Role", "X-Tenant-ID"])
     app.register_blueprint(api)
 
     @app.get("/")
