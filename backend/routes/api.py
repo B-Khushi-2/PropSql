@@ -13,6 +13,14 @@ from services.support_service import get_case, list_cases
 api = Blueprint("api", __name__, url_prefix="/api")
 
 
+@api.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    return response
+
+
 def get_active_role():
     raw_role = (request.args.get("role") or request.headers.get("X-User-Role", "property_manager")).lower().strip()
     return "property_manager" if raw_role in ("property_manager", "operations") else raw_role
