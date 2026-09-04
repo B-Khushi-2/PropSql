@@ -12,8 +12,15 @@ from routes.api import api
 def create_app(config=Config):
     app = Flask(__name__)
     app.config.from_object(config)
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True, allow_headers=["*"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     app.register_blueprint(api)
+
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-User-Role, X-Tenant-ID, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        return response
 
     @app.get("/")
     def index():
