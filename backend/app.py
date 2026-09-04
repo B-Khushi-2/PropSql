@@ -55,6 +55,9 @@ def create_app(config=Config):
     return app
 
 
+app = create_app()
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    create_app().run(host=Config.API_HOST, port=Config.API_PORT, debug=False)
+    app.run(host=Config.API_HOST, port=Config.API_PORT, debug=False)
+
