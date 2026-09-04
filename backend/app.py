@@ -12,9 +12,6 @@ from routes.api import api
 def create_app(config=Config):
     app = Flask(__name__)
     app.config.from_object(config)
-    CORS(app, resources={r"/*": {"origins": "*"}}, send_wildcard=True)
-
-    app.register_blueprint(api)
 
     @app.before_request
     def handle_preflight():
@@ -24,6 +21,8 @@ def create_app(config=Config):
             response.headers["Access-Control-Allow-Headers"] = "*"
             response.headers["Access-Control-Allow-Methods"] = "*"
             return response, 200
+
+    app.register_blueprint(api)
 
     @app.after_request
     def add_cors_headers(response):
