@@ -12,8 +12,9 @@ export async function apiRequest(path, options = {}) {
       },
       ...options,
     })
-  } catch {
-    throw new Error('Unable to reach the PropSQL API. Confirm the Flask service is running.')
+  } catch (err) {
+    console.error('Fetch execution error:', err)
+    throw new Error(`Unable to reach the PropSQL API (${err.message || 'NetworkError'}). Confirm the Flask service is running.`)
   }
   const body = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(body.error || `Request failed with status ${response.status}.`)
