@@ -4,11 +4,10 @@ export async function apiRequest(path, options = {}) {
   const activeRole = localStorage.getItem('propsql_active_role') || 'property_manager'
   let response
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    const separator = path.includes('?') ? '&' : '?'
+    const fullUrl = `${API_BASE}${path}${separator}role=${encodeURIComponent(activeRole)}`
+    response = await fetch(fullUrl, {
       headers: {
-        'Content-Type': 'application/json',
-        'X-User-Role': activeRole,
-        'X-Tenant-ID': '1',
         ...options.headers,
       },
       ...options,

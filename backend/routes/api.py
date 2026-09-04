@@ -14,7 +14,7 @@ api = Blueprint("api", __name__, url_prefix="/api")
 
 
 def get_active_role():
-    raw_role = request.headers.get("X-User-Role", "property_manager").lower().strip()
+    raw_role = (request.args.get("role") or request.headers.get("X-User-Role", "property_manager")).lower().strip()
     return "property_manager" if raw_role in ("property_manager", "operations") else raw_role
 
 
