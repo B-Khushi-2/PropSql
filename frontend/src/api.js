@@ -1,4 +1,4 @@
-const API_BASE = 'https://propsql.onrender.com/api'
+const API_BASE = '/api'
 
 export async function apiRequest(path, options = {}) {
   const activeRole = localStorage.getItem('propsql_active_role') || 'property_manager'
