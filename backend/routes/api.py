@@ -385,6 +385,26 @@ PERFORMANCE_EXAMPLES = [
 ]
 
 
+@api.get("/audit-logs")
+def get_audit_logs():
+    err = enforce_role(["property_manager", "support_engineer"])
+    if err:
+        return err
+    page, page_size, pagination = pagination_params()
+    with connection.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT audit_id, table_name, action, record_id, old_data, new_data, changed_at
+            FROM audit_logs
+            ORDER BY changed_at DESC, audit_id DESC
+            LIMIT %(limit)s OFFSET %(offset)s;
+        """, pagination)
+        rows = cur.fetchall()
+        for row in rows:
+            if row.get("changed_at"):
+                row["changed_at"] = row["changed_at"].isoformat()
+    return jsonify({"data": rows, "pagination": {"page": page, "page_size": page_size}})
+
+
 @api.get("/performance")
 def performance():
     err = enforce_role(["property_manager", "support_engineer"])
