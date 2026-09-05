@@ -36,7 +36,8 @@ def enforce_role(allowed_roles):
 def pagination_params():
     try:
         page = max(int(request.args.get("page", 1)), 1)
-        page_size = min(max(int(request.args.get("page_size", 50)), 1), Config.MAX_PAGE_SIZE)
+        raw_size = int(request.args.get("page_size", 50))
+        page_size = min(max(raw_size, 1), 500)
     except ValueError as exc:
         raise ValueError("page and page_size must be integers.") from exc
     return page, page_size, {"limit": page_size, "offset": (page - 1) * page_size}
