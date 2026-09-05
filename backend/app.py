@@ -24,6 +24,57 @@ def create_app(config=Config):
 
     app.register_blueprint(api)
 
+    @app.before_first_request
+    def init_db_tables():
+        pass
+
+    def ensure_audit_logs():
+        from db import execute_query
+        statements = [
+            """CREATE TABLE IF NOT EXISTS audit_logs (
+                audit_id BIGSERIAL PRIMARY KEY,
+                table_name VARCHAR(50) NOT NULL,
+                action VARCHAR(20) NOT NULL,
+                record_id BIGINT,
+                old_data JSONB,
+                new_data JSONB,
+                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );""",
+            """CREATE OR REPLACE FUNCTION log_lease_changes()
+            RETURNS TRIGGER LANGUAGE plpgsql AS $$
+            BEGIN
+                IF (TG_OP = 'INSERT') THEN
+                    INSERT INTO audit_logs (table_name, action, record_id, new_data)
+                    VALUES ('leases', 'INSERT', NEW.lease_id, to_jsonb(NEW));
+                    RETURN NEW;
+                ELSIF (TG_OP = 'UPDATE') THEN
+                    INSERT INTO audit_logs (table_name, action, record_id, old_data, new_data)
+                    VALUES ('leases', 'UPDATE', NEW.lease_id, to_jsonb(OLD), to_jsonb(NEW));
+                    RETURN NEW;
+                ELSIF (TG_OP = 'DELETE') THEN
+                    INSERT INTO audit_logs (table_name, action, record_id, old_data)
+                    VALUES ('leases', 'DELETE', OLD.lease_id, to_jsonb(OLD));
+                    RETURN OLD;
+                END IF;
+                RETURN NULL;
+            END;
+            $$;""",
+            "DROP TRIGGER IF EXISTS trg_audit_leases ON leases;",
+            """CREATE TRIGGER trg_audit_leases
+            AFTER INSERT OR UPDATE OR DELETE ON leases
+            FOR EACH ROW EXECUTE FUNCTION log_lease_changes();"""
+        ]
+        for stmt in statements:
+            try:
+                execute_query(stmt, readonly=False)
+            except Exception as e:
+                logging.warning("Auto DDL init notice: %s", e)
+
+    try:
+        ensure_audit_logs()
+    except Exception as e:
+        logging.warning("Startup table ensure notice: %s", e)
+
     @app.after_request
     def add_cors_headers(response):
         response.headers["Access-Control-Allow-Origin"] = "*"
