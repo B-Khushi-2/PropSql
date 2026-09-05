@@ -399,17 +399,19 @@ def get_audit_logs():
     except Exception:
         page, page_size = 1, 50
     offset = (page - 1) * page_size
-    with connection.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("""
-            SELECT audit_id, table_name, action, record_id, old_data, new_data, changed_at
-            FROM audit_logs
-            ORDER BY changed_at DESC, audit_id DESC
-            LIMIT %s OFFSET %s;
-        """, (page_size, offset))
-        rows = cur.fetchall()
-        for row in rows:
-            if row.get("changed_at"):
-                row["changed_at"] = row["changed_at"].isoformat()
+    sql = """
+        SELECT audit_id, table_name, action, record_id, old_data, new_data, changed_at
+        FROM audit_logs
+        ORDER BY changed_at DESC, audit_id DESC
+        LIMIT %s OFFSET %s;
+    """
+    try:
+        rows = execute_query(sql, (page_size, offset))
+    except Exception:
+        rows = []
+    for row in rows:
+        if row.get("changed_at"):
+            row["changed_at"] = str(row["changed_at"])
     return jsonify({"data": rows, "pagination": {"page": page, "page_size": page_size}})
 
 
