@@ -399,6 +399,46 @@ def get_audit_logs():
     except Exception:
         page, page_size = 1, 50
     offset = (page - 1) * page_size
+    
+    init_sql = """
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            audit_id BIGSERIAL PRIMARY KEY,
+            table_name VARCHAR(50) NOT NULL,
+            action VARCHAR(20) NOT NULL,
+            record_id BIGINT,
+            old_data JSONB,
+            new_data JSONB,
+            changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE OR REPLACE FUNCTION log_lease_changes()
+        RETURNS TRIGGER LANGUAGE plpgsql AS $$
+        BEGIN
+            IF (TG_OP = 'INSERT') THEN
+                INSERT INTO audit_logs (table_name, action, record_id, new_data)
+                VALUES ('leases', 'INSERT', NEW.lease_id, to_jsonb(NEW));
+                RETURN NEW;
+            ELSIF (TG_OP = 'UPDATE') THEN
+                INSERT INTO audit_logs (table_name, action, record_id, old_data, new_data)
+                VALUES ('leases', 'UPDATE', NEW.lease_id, to_jsonb(OLD), to_jsonb(NEW));
+                RETURN NEW;
+            ELSIF (TG_OP = 'DELETE') THEN
+                INSERT INTO audit_logs (table_name, action, record_id, old_data)
+                VALUES ('leases', 'DELETE', OLD.lease_id, to_jsonb(OLD));
+                RETURN OLD;
+            END IF;
+            RETURN NULL;
+        END;
+        $$;
+        DROP TRIGGER IF EXISTS leases_audit_log_trigger ON leases;
+        CREATE TRIGGER leases_audit_log_trigger
+        AFTER INSERT OR UPDATE OR DELETE ON leases
+        FOR EACH ROW EXECUTE FUNCTION log_lease_changes();
+    """
+    try:
+        execute_query(init_sql, readonly=False)
+    except Exception as exc:
+        app.logger.warning("Audit log init check notice: %s", exc)
+
     sql = """
         SELECT audit_id, table_name, action, record_id, old_data, new_data, changed_at
         FROM audit_logs
@@ -409,6 +449,7 @@ def get_audit_logs():
         rows = execute_query(sql, (page_size, offset))
     except Exception:
         rows = []
+
     for row in rows:
         if row.get("changed_at"):
             row["changed_at"] = str(row["changed_at"])
