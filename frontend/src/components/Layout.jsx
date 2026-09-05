@@ -7,15 +7,15 @@ export const ROLES = {
     icon: '🏢',
     badge: 'Operations',
     description: 'Full portfolio, revenue collection, occupancy, and operational reporting access.',
-    views: ['dashboard', 'properties', 'units', 'tenants', 'leases', 'payments', 'maintenance', 'reports', 'audit_logs']
+    views: ['dashboard', 'properties', 'units', 'tenants', 'leases', 'payments', 'maintenance', 'reports']
   },
   support_engineer: {
     id: 'support_engineer',
     name: 'Support Engineer',
     icon: '🛠️',
     badge: 'SQL Support & Diagnostics',
-    description: 'Access to SQL support cases, PostgreSQL execution plans, audit logs, and validation tests.',
-    views: ['dashboard', 'reports', 'support', 'performance', 'audit_logs']
+    description: 'Access to SQL support cases, PostgreSQL execution plans, and validation tests.',
+    views: ['dashboard', 'reports', 'support', 'performance']
   },
   tenant: {
     id: 'tenant',
@@ -44,7 +44,6 @@ const navigation = [
   ['payments', 'Payments', '🏢👤'], 
   ['maintenance', 'Maintenance', '🏢👤🔧'], 
   ['reports', 'Reports', '🏢🛠️👤🔧'],
-  ['audit_logs', 'Audit Logs', '🏢🛠️'],
   ['support', 'SQL Support', '🛠️'], 
   ['performance', 'Query Performance', '🛠️']
 ]
