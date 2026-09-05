@@ -393,7 +393,12 @@ def get_audit_logs():
     err = enforce_role(["property_manager", "support_engineer"])
     if err:
         return err
-    page, page_size, pagination = pagination_params()
+    try:
+        page = max(int(request.args.get("page", 1)), 1)
+        page_size = min(max(int(request.args.get("page_size", 50)), 1), 500)
+    except Exception:
+        page, page_size = 1, 50
+    offset = (page - 1) * page_size
     with connection.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
             CREATE TABLE IF NOT EXISTS audit_logs (
@@ -411,8 +416,8 @@ def get_audit_logs():
             SELECT audit_id, table_name, action, record_id, old_data, new_data, changed_at
             FROM audit_logs
             ORDER BY changed_at DESC, audit_id DESC
-            LIMIT %(limit)s OFFSET %(offset)s;
-        """, pagination)
+            LIMIT %s OFFSET %s;
+        """, (page_size, offset))
         rows = cur.fetchall()
         for row in rows:
             if row.get("changed_at"):
