@@ -400,8 +400,8 @@ def get_audit_logs():
         page, page_size = 1, 50
     offset = (page - 1) * page_size
     
-    init_sql = """
-        CREATE TABLE IF NOT EXISTS audit_logs (
+    statements = [
+        """CREATE TABLE IF NOT EXISTS audit_logs (
             audit_id BIGSERIAL PRIMARY KEY,
             table_name VARCHAR(50) NOT NULL,
             action VARCHAR(20) NOT NULL,
@@ -409,8 +409,8 @@ def get_audit_logs():
             old_data JSONB,
             new_data JSONB,
             changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE OR REPLACE FUNCTION log_lease_changes()
+        );""",
+        """CREATE OR REPLACE FUNCTION log_lease_changes()
         RETURNS TRIGGER LANGUAGE plpgsql AS $$
         BEGIN
             IF (TG_OP = 'INSERT') THEN
@@ -428,16 +428,17 @@ def get_audit_logs():
             END IF;
             RETURN NULL;
         END;
-        $$;
-        DROP TRIGGER IF EXISTS leases_audit_log_trigger ON leases;
-        CREATE TRIGGER leases_audit_log_trigger
+        $$;""",
+        "DROP TRIGGER IF EXISTS leases_audit_log_trigger ON leases;",
+        """CREATE TRIGGER leases_audit_log_trigger
         AFTER INSERT OR UPDATE OR DELETE ON leases
-        FOR EACH ROW EXECUTE FUNCTION log_lease_changes();
-    """
-    try:
-        execute_query(init_sql, readonly=False)
-    except Exception as exc:
-        app.logger.warning("Audit log init check notice: %s", exc)
+        FOR EACH ROW EXECUTE FUNCTION log_lease_changes();"""
+    ]
+    for stmt in statements:
+        try:
+            execute_query(stmt, readonly=False)
+        except Exception as exc:
+            app.logger.warning("Audit log statement warning: %s", exc)
 
     sql = """
         SELECT audit_id, table_name, action, record_id, old_data, new_data, changed_at
