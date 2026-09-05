@@ -401,18 +401,6 @@ def get_audit_logs():
     offset = (page - 1) * page_size
     with connection.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS audit_logs (
-                audit_id BIGSERIAL PRIMARY KEY,
-                table_name VARCHAR(50) NOT NULL,
-                action VARCHAR(20) NOT NULL,
-                record_id BIGINT,
-                old_data JSONB,
-                new_data JSONB,
-                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-        connection.commit()
-        cur.execute("""
             SELECT audit_id, table_name, action, record_id, old_data, new_data, changed_at
             FROM audit_logs
             ORDER BY changed_at DESC, audit_id DESC
