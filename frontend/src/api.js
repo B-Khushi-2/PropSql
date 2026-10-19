@@ -8,6 +8,7 @@ export async function apiRequest(path, options = {}) {
     const fullUrl = `${API_BASE}${path}${separator}role=${encodeURIComponent(activeRole)}`
     response = await fetch(fullUrl, {
       headers: {
+        'Content-Type': 'application/json',
         ...options.headers,
       },
       ...options,
