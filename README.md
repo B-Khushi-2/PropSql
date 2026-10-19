@@ -331,6 +331,4 @@ Live screenshots are intentionally not fabricated or bundled as static UI data.
 - ✅ **Materialized Analytical Views**: Materialized view (`property_performance_mat_view`) for zero-latency portfolio performance queries.
 - ✅ **Interactive Role-Based Write Actions**: Inline status transitions for maintenance tickets, payments, and leases based on active role authorization.
 
-## Portfolio positioning
 
-Lead with this sentence: **“PropSQL is an enterprise PostgreSQL property operations & database engineering system demonstrating transactional write safety, stored procedures, JSONB audit triggers, full-text indexing, role-based security, query optimization, and live execution plan analysis.”**
